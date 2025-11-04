@@ -1,29 +1,29 @@
 import pandas as pd
-import matplotlib.pyplot as plt
+import re
 
-file_path = "Excel sheets/Sheet1.xlsx"
-sheet_name = "Data"  # Change if needed
-column_name = "Root Cause"  # Change to your column name
+file_path = r"Excel sheets/Sheet1.xlsx"
+df = pd.read_excel(file_path)
 
-# Read Excel
-df = pd.read_excel(file_path, sheet_name=sheet_name)
+df.columns = df.columns.str.strip()
+df["Root Cause"] = df["Root Cause"]
 
-# Extract data from a specific column
-column_data = df[column_name]
+root_causes_file = r"Excel sheets/Root Causes.xlsx"  # Excel file with the list of root causes
+root_causes_df = pd.read_excel(root_causes_file)
 
-# Example: print all values
-# for value in column_data:
-#    print(value)
+# Define key phrases to search for from an Excel sheet
+root_causes = root_causes_df["Root Cause"]
 
-grouped_df = column_data.value_counts().reset_index()
-grouped_df.columns = ["Root Cause", "Count"]
-grouped_df.index = grouped_df.index + 1
+# Count occurrences of each phrase
+results = []
+for root_cause in root_causes:
+    count = df["Root Cause"].str.contains(re.escape(root_cause), na=False).sum()
+    results.append({"Root Cause": root_cause, "Count": count})
 
-plt.figure(figsize=(10,6))
-plt.bar(grouped_df["Root Cause"], grouped_df["Count"], color="skyblue")
-plt.xlabel("Root Cause")
-plt.ylabel("Count")
-plt.title("Root Cause Frequency")
-plt.xticks(rotation=45, ha="right")  # rotate x labels for readability
-plt.tight_layout()  # adjust layout to prevent clipping
-plt.show()
+root_cause_counts = pd.DataFrame(results).sort_values(by="Count", ascending=False)
+
+root_cause_counts.index = range(1, len(root_cause_counts) + 1)
+
+print("\nPhrase match results:\n")
+print(root_cause_counts)
+
+
