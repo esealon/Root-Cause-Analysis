@@ -5,7 +5,7 @@ file_path = r"Excel sheets/Sheet1.xlsx"
 df = pd.read_excel(file_path)
 
 df.columns = df.columns.str.strip()
-df["Root Cause"] = df["Root Cause"]
+
 
 root_causes_file = r"Excel sheets/Root Causes.xlsx"  # Excel file with the list of root causes
 root_causes_df = pd.read_excel(root_causes_file)
@@ -15,15 +15,35 @@ root_causes = root_causes_df["Root Cause"]
 
 # Count occurrences of each phrase
 results = []
-for root_cause in root_causes:
-    count = df["Root Cause"].str.contains(re.escape(root_cause), na=False).sum()
-    results.append({"Root Cause": root_cause, "Count": count})
+# Loop through each supplier and each root cause
+for supplier in df["Supplier"].unique():
+    supplier_data = df[df["Supplier"] == supplier]
+    for root_cause in root_causes:
+        count = supplier_data["Root Cause"].str.contains(re.escape(root_cause), na=False).sum()
+        if count > 0:
+            results.append({
+                "Supplier": supplier,
+                "Root Cause": root_cause,
+                "Count": count
+            })
 
-root_cause_counts = pd.DataFrame(results).sort_values(by="Count", ascending=False)
+# Convert results into a dataframe
+supplier_root_cause_counts = pd.DataFrame(results)
 
-root_cause_counts.index = range(1, len(root_cause_counts) + 1)
+# Sort by supplier, then count (descending)
+supplier_root_cause_counts = supplier_root_cause_counts.sort_values(
+    by=["Supplier", "Count"], ascending=[True, False]
+).reset_index(drop=True)
 
-print("\nPhrase match results:\n")
-print(root_cause_counts)
+# Start index at 1 instead of 0
+supplier_root_cause_counts.index = range(1, len(supplier_root_cause_counts) + 1)
+
+print("\nRoot Cause counts by Supplier:\n")
+print(supplier_root_cause_counts)
+
+# Optional: Export results to Excel
+output_path = r"Excel sheets/Supplier Root Cause Counts.xlsx"
+supplier_root_cause_counts.to_excel(output_path, index=False)
+print(f"\nResults saved to {output_path}")
 
 
