@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+import matplotlib.pyplot as plt
 
 file_path = r"Excel sheets/Sheet1.xlsx"
 df = pd.read_excel(file_path)
@@ -45,5 +46,15 @@ print(supplier_root_cause_counts)
 output_path = r"Excel sheets/Supplier Root Cause Counts.xlsx"
 supplier_root_cause_counts.to_excel(output_path, index=False)
 print(f"\nResults saved to {output_path}")
+
+pivot_data = supplier_root_cause_counts.pivot(index="Root Cause", columns="Supplier", values="Count").fillna(0)
+pivot_data.plot(kind="bar", figsize=(10, 6))
+
+plt.title("Root Cause Counts by Supplier")
+plt.xlabel("Root Cause")
+plt.ylabel("Count")
+plt.xticks(rotation=45, ha="right")
+plt.tight_layout()
+plt.show()
 
 
